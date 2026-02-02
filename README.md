@@ -1,7 +1,7 @@
 # Backend (Vercel Functions)
 
 This folder contains the API for the webapp, intended to be deployed as a
-separate Vercel project.
+separate Vercel project (frontend lives in `tharaday-next`).
 
 ## Setup (GitHub Pages + Vercel)
 1. Create a new Vercel project and set the **Root Directory** to this repo.
@@ -11,8 +11,7 @@ separate Vercel project.
 
 ## Local env
 - Copy `.env.example` to `.env.local` for local development.
-- Use `.env.production` only if you do local production-style builds.
-- Do not commit `.env.local` or `.env.production` (they are ignored).
+- Do not commit `.env.local` (it is ignored).
 
 ## Endpoints
 - `GET /api/health`
@@ -33,3 +32,9 @@ separate Vercel project.
 - `api/` -> thin Vercel Function entrypoints
 - `src/lib/` -> shared helpers (db, http)
 - `src/routes/` -> route handlers
+
+## Docs
+- `docs/DEPLOY.md` -> deploy checklist for backend + frontend
+- `docs/VERCEL.md` -> Vercel setup and verification
+- `docs/ENV.md` -> environment variables reference
+- `docs/GITHUB_PAGES.md` -> GitHub Pages notes for frontend
