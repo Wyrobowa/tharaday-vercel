@@ -1,0 +1,28 @@
+import { getSql, MissingDatabaseUrlError } from '../lib/db';
+import { handleOptions, sendJson } from '../lib/http';
+
+export default async function handler(req: any, res: any) {
+  if (handleOptions(req, res)) {
+    return;
+  }
+  if (req.method !== 'GET') {
+    return sendJson(req, res, 405, { error: 'method_not_allowed' });
+  }
+
+  try {
+    const sql = getSql();
+    const statuses = await sql`
+      SELECT id, name
+      FROM statuses
+      ORDER BY name DESC;
+    `;
+
+    return sendJson(req, res, 200, statuses);
+  } catch (err) {
+    if (err instanceof MissingDatabaseUrlError) {
+      return sendJson(req, res, 500, { error: 'missing_database_url' });
+    }
+
+    return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+  }
+}
