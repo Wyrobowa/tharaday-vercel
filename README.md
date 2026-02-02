@@ -29,9 +29,9 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - `GET /api/priorities`
 
 ## Structure
-- `api/` -> thin Vercel Function entrypoints
-- `src/lib/` -> shared helpers (db, http)
-- `src/routes/` -> route handlers
+- `api/` -> Vercel Function routes
+- `api/_db.ts` -> Neon DB helper
+- `api/_utils.ts` -> CORS + HTTP helpers
 
 ## Docs
 - `docs/DEPLOY.md` -> deploy checklist for backend + frontend
