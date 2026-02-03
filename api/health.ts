@@ -1,3 +1,7 @@
+/**
+ * @description Health check (DB connectivity).
+ * @methods GET
+ */
 import { getSql, MissingDatabaseUrlError } from './_db';
 import { handleOptions, sendJson } from './_utils';
 

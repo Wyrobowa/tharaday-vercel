@@ -1,3 +1,7 @@
+/**
+ * @description Users CRUD.
+ * @methods GET, POST, PATCH, DELETE
+ */
 import { getSql, MissingDatabaseUrlError } from './_db';
 import { handleOptions, readJsonBody, sendJson, sendNoContent } from './_utils';
 

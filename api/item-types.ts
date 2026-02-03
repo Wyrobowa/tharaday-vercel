@@ -1,3 +1,7 @@
+/**
+ * @description List item types.
+ * @methods GET
+ */
 import { getSql, MissingDatabaseUrlError } from './_db';
 import { handleOptions, sendJson } from './_utils';
 
