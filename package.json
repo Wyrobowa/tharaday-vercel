@@ -11,11 +11,13 @@
     "build:vercel": "vercel build",
     "start": "vercel dev --prod",
     "deploy": "vercel --prod",
+    "generate:routes": "node scripts/generate-routes.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "npm run generate:routes"
   },
   "overrides": {
     "@babel/runtime": "^7.28.6",
