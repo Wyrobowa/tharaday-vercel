@@ -28,10 +28,15 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - `GET /api/item-types`
 - `GET /api/priorities`
 
+The homepage (`/`) renders a list of endpoints from `public/routes.json`. That
+file is generated at install time by `scripts/generate-routes.mjs` based on the
+JSDoc metadata in `api/*.ts`.
+
 ## Structure
 - `api/` -> Vercel Function routes
 - `api/_db.ts` -> Neon DB helper
 - `api/_utils.ts` -> CORS + HTTP helpers
+- `public/routes.json` -> generated endpoint list for the homepage
 
 ## Docs
 - `docs/DEPLOY.md` -> deploy checklist for backend + frontend
