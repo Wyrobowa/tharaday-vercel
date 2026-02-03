@@ -7,6 +7,7 @@ import { handleOptions, readJsonBody, sendJson, sendNoContent } from './_utils';
 
 type PostgresError = { code?: string; message?: string };
 
+// noinspection JSUnusedGlobalSymbols
 export default async function handler(req: any, res: any) {
   if (handleOptions(req, res)) {
     return;

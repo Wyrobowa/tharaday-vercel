@@ -5,6 +5,7 @@
 import { getSql, MissingDatabaseUrlError } from './_db';
 import { handleOptions, sendJson } from './_utils';
 
+// noinspection JSUnusedGlobalSymbols
 export default async function handler(req: any, res: any) {
   if (handleOptions(req, res)) {
     return;

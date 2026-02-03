@@ -5,6 +5,7 @@
 import { getSql, MissingDatabaseUrlError } from './_db';
 import { handleOptions, sendJson } from './_utils';
 
+// noinspection JSUnusedGlobalSymbols
 export default async function handler(req: any, res: any) {
   if (handleOptions(req, res)) {
     return;
@@ -19,7 +20,7 @@ export default async function handler(req: any, res: any) {
       SELECT id, name, is_active
       FROM item_types
       WHERE is_active = true
-      ORDER BY name ASC;
+      ORDER BY name;
     `;
 
     return sendJson(req, res, 200, itemTypes);
