@@ -24,27 +24,40 @@
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         padding: 20px 24px;
-        margin-bottom: 20px;
       }
       h1 {
         margin: 0 0 8px 0;
         font-size: 24px;
       }
       p {
-        margin: 0;
+        margin: 0 0 16px 0;
         color: #475569;
       }
-      iframe {
-        width: 100%;
-        height: 720px;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #ffffff;
+      ul {
+        padding-left: 18px;
+        margin: 0;
       }
-      @media (max-width: 640px) {
-        iframe {
-          height: 640px;
-        }
+      li {
+        margin: 6px 0;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .status {
+        display: inline-block;
+        margin: 12px 0 16px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #1e293b;
+        font-size: 12px;
+      }
+      .muted {
+        color: #64748b;
       }
     </style>
   </head>
@@ -52,9 +65,49 @@
     <div class="wrap">
       <div class="card">
         <h1>Tharaday API</h1>
-        <p>Live endpoint list is embedded below.</p>
+        <p>Backend for the Tharaday webapp.</p>
+        <div class="status">Try: <a href="/api/health">/api/health</a></div>
+        <h2>Endpoints</h2>
+        <p class="muted" id="loading">Loading endpoints...</p>
+        <ul id="endpoints"></ul>
       </div>
-      <iframe title="Tharaday API" src="/api"></iframe>
     </div>
+    <script>
+      const list = document.getElementById('endpoints');
+      const loading = document.getElementById('loading');
+
+      function renderItem(route) {
+        const item = document.createElement('li');
+        const methods = document.createElement('strong');
+        methods.textContent = route.methods.join(', ');
+
+        const link = document.createElement('a');
+        link.href = route.path;
+        link.textContent = route.path;
+
+        item.appendChild(methods);
+        item.append(' ');
+        item.appendChild(link);
+        item.append(` — ${route.description}`);
+
+        return item;
+      }
+
+      fetch('/api/routes')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to load endpoints');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const routes = Array.isArray(data.routes) ? data.routes : [];
+          routes.forEach((route) => list.appendChild(renderItem(route)));
+          loading.remove();
+        })
+        .catch(() => {
+          loading.textContent = 'Unable to load endpoints.';
+        });
+    </script>
   </body>
 </html>
