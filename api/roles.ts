@@ -17,9 +17,10 @@ export default async function handler(req: any, res: any) {
   try {
     const sql = getSql();
     const roles = await sql`
-      SELECT id, name
+      SELECT id, name, is_active
       FROM roles
-      ORDER BY name DESC;
+      WHERE is_active = true
+      ORDER BY name;
     `;
 
     return sendJson(req, res, 200, roles);

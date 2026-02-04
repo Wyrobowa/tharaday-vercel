@@ -1,0 +1,79 @@
+{
+  "routes": [
+    {
+      "path": "/api/authors",
+      "description": "Authors CRUD.",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "path": "/api/books",
+      "description": "books CRUD.",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "description": "Health check (DB connectivity).",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/priorities",
+      "description": "List priorities.",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/publishers",
+      "description": "Publishers CRUD.",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "path": "/api/roles",
+      "description": "List roles.",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/statuses",
+      "description": "List statuses.",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/tags",
+      "description": "List tags.",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/users",
+      "description": "Users CRUD.",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ]
+    }
+  ]
+}

@@ -24,22 +24,26 @@ export default async function handler(req: any, res: any) {
   }
 
   if (req.method === 'GET') {
-    const users = await sql`
-      SELECT
-        u.id,
-        u.name,
-        u.email,
-        u.role_id,
-        u.status_id,
-        r.name AS role,
-        s.name AS status
-      FROM users u
-      LEFT JOIN roles r ON r.id = u.role_id
-      LEFT JOIN statuses s ON s.id = u.status_id
-      ORDER BY u.id DESC;
-    `;
+    try {
+      const users = await sql`
+        SELECT
+          u.id,
+          u.name,
+          u.email,
+          u.role_id,
+          u.status_id,
+          r.name AS role,
+          s.name AS status
+        FROM users u
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN statuses s ON s.id = u.status_id
+        ORDER BY u.id DESC;
+      `;
 
-    return sendJson(req, res, 200, users);
+      return sendJson(req, res, 200, users);
+    } catch (err) {
+      return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+    }
   }
 
   if (req.method === 'POST') {
@@ -49,18 +53,17 @@ export default async function handler(req: any, res: any) {
       const name = String(body.name ?? '').trim();
       const email = String(body.email ?? '').trim();
       const roleIdRaw = body.role_id;
-
-      const roleId =
-        roleIdRaw === null || roleIdRaw === undefined || roleIdRaw === ''
-          ? null
-          : Number(roleIdRaw);
-
       const statusIdRaw = body.status_id;
 
-      const statusId =
-        statusIdRaw === null || statusIdRaw === undefined || statusIdRaw === ''
-          ? null
-          : Number(statusIdRaw);
+      if (roleIdRaw === null || roleIdRaw === undefined || roleIdRaw === '') {
+        return sendJson(req, res, 400, { error: 'Users: role_id required' });
+      }
+      if (statusIdRaw === null || statusIdRaw === undefined || statusIdRaw === '') {
+        return sendJson(req, res, 400, { error: 'Users: status_id required' });
+      }
+
+      const roleId = Number(roleIdRaw);
+      const statusId = Number(statusIdRaw);
 
       if (!name) {
         return sendJson(req, res, 400, { error: 'Users: name required' });
@@ -68,10 +71,10 @@ export default async function handler(req: any, res: any) {
       if (!email) {
         return sendJson(req, res, 400, { error: 'Users: email required' });
       }
-      if (roleId !== null && !Number.isFinite(roleId)) {
+      if (!Number.isFinite(roleId)) {
         return sendJson(req, res, 400, { error: 'Users: role_id must be a number' });
       }
-      if (statusId !== null && !Number.isFinite(statusId)) {
+      if (!Number.isFinite(statusId)) {
         return sendJson(req, res, 400, {
           error: 'Users: status_id must be a number',
         });
@@ -132,14 +135,34 @@ export default async function handler(req: any, res: any) {
         values.push(email);
       }
       if (role_id !== undefined) {
+        if (role_id === '' || role_id === null) {
+          return sendJson(req, res, 400, {
+            error: 'Users: role_id must be a number',
+          });
+        }
+        const roleIdValue = Number(role_id);
+        if (!Number.isFinite(roleIdValue)) {
+          return sendJson(req, res, 400, {
+            error: 'Users: role_id must be a number',
+          });
+        }
         updates.push(`role_id = $${placeholderIndex++}`);
-        values.push(role_id === '' || role_id === null ? null : Number(role_id));
+        values.push(roleIdValue);
       }
       if (status_id !== undefined) {
+        if (status_id === '' || status_id === null) {
+          return sendJson(req, res, 400, {
+            error: 'Users: status_id must be a number',
+          });
+        }
+        const statusIdValue = Number(status_id);
+        if (!Number.isFinite(statusIdValue)) {
+          return sendJson(req, res, 400, {
+            error: 'Users: status_id must be a number',
+          });
+        }
         updates.push(`status_id = $${placeholderIndex++}`);
-        values.push(
-          status_id === '' || status_id === null ? null : Number(status_id),
-        );
+        values.push(statusIdValue);
       }
 
       if (updates.length === 0) {

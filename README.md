@@ -14,19 +14,31 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - Do not commit `.env.local` (it is ignored).
 
 ## Endpoints
+- `GET /api/authors`
+- `POST /api/authors`
+- `PATCH /api/authors`
+- `DELETE /api/authors?id=...`
 - `GET /api/health`
+- `GET /api/publishers`
+- `POST /api/publishers`
+- `PATCH /api/publishers`
+- `DELETE /api/publishers?id=...`
 - `GET /api/users`
 - `POST /api/users`
 - `PATCH /api/users`
 - `DELETE /api/users?id=...`
 - `GET /api/roles`
 - `GET /api/statuses`
-- `GET /api/items`
-- `POST /api/items`
-- `PATCH /api/items`
-- `DELETE /api/items?id=...`
-- `GET /api/item-types`
+- `GET /api/books`
+- `POST /api/books`
+- `PATCH /api/books`
+- `DELETE /api/books?id=...`
+- `GET /api/tags`
 - `GET /api/priorities`
+
+## Database schema + seeds
+- `docs/schema.sql` -> baseline tables for users/books + lookup tables
+- `docs/seed.sql` -> starter data for local/dev environments
 
 The homepage (`/`) renders a list of endpoints from `public/routes.json`. That
 file is generated at install time by `scripts/generate-routes.mjs` based on the

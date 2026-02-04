@@ -1,5 +1,5 @@
 /**
- * @description List item types.
+ * @description List tags.
  * @methods GET
  */
 import { getSql, MissingDatabaseUrlError } from './_db';
@@ -16,14 +16,14 @@ export default async function handler(req: any, res: any) {
 
   try {
     const sql = getSql();
-    const itemTypes = await sql`
+    const tags = await sql`
       SELECT id, name, is_active
-      FROM item_types
+      FROM tags
       WHERE is_active = true
       ORDER BY name;
     `;
 
-    return sendJson(req, res, 200, itemTypes);
+    return sendJson(req, res, 200, tags);
   } catch (err) {
     if (err instanceof MissingDatabaseUrlError) {
       return sendJson(req, res, 500, { error: 'missing_database_url' });
