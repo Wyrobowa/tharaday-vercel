@@ -162,6 +162,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           LEFT JOIN priorities p ON p.id = i.priority_id
           LEFT JOIN authors a ON a.id = i.author_id
           LEFT JOIN publishers pub ON pub.id = i.publisher_id
+          WHERE (s.name IS NULL OR LOWER(s.name) <> 'removed')
           ORDER BY i.id DESC;
         `;
 
@@ -198,7 +199,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
 
       const values: unknown[] = [];
-      const where: string[] = [];
+      const where: string[] = [`(s.name IS NULL OR LOWER(s.name) <> 'removed')`];
 
       if (id !== null) {
         values.push(id);

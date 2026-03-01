@@ -32,6 +32,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           SELECT name
           FROM statuses
           WHERE is_active = true
+            AND LOWER(name) <> 'removed'
           ORDER BY name;
         `,
         sql`
@@ -43,7 +44,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         sql`
           SELECT DISTINCT CONCAT_WS(' ', a.first_name, a.last_name) AS name
           FROM books b
+          LEFT JOIN statuses s ON s.id = b.status_id
           JOIN authors a ON a.id = b.author_id
+          WHERE (s.name IS NULL OR LOWER(s.name) <> 'removed')
           ORDER BY name;
         `,
       ]);
