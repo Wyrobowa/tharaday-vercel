@@ -17,6 +17,100 @@ import {
   sendDbError,
 } from './_handler';
 
+type BooksSort =
+  | 'newest'
+  | 'title_asc'
+  | 'title_desc'
+  | 'author_asc'
+  | 'author_desc';
+
+type CursorPayload = {
+  id: number;
+  title?: string;
+  author_first_name?: string;
+  author_last_name?: string;
+};
+
+function getQueryParam(req: ApiRequest, key: string) {
+  const value = req.query?.[key];
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+}
+
+function getQueryNumber(req: ApiRequest, key: string) {
+  const value = getQueryParam(req, key);
+  if (!value) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function decodeCursor(rawCursor: string | undefined) {
+  if (!rawCursor) {
+    return null;
+  }
+
+  try {
+    const json = Buffer.from(rawCursor, 'base64url').toString('utf8');
+    const parsed = JSON.parse(json) as CursorPayload;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function encodeCursor(cursor: CursorPayload) {
+  return Buffer.from(JSON.stringify(cursor)).toString('base64url');
+}
+
+function getSortConfig(sort: BooksSort) {
+  if (sort === 'title_asc') {
+    return {
+      orderBy: 'i.title ASC, i.id ASC',
+      cursorWhere:
+        '(i.title > $%1$d OR (i.title = $%1$d AND i.id > $%2$d))',
+    };
+  }
+
+  if (sort === 'title_desc') {
+    return {
+      orderBy: 'i.title DESC, i.id DESC',
+      cursorWhere:
+        '(i.title < $%1$d OR (i.title = $%1$d AND i.id < $%2$d))',
+    };
+  }
+
+  if (sort === 'author_asc') {
+    return {
+      orderBy:
+        "COALESCE(a.last_name, '') ASC, COALESCE(a.first_name, '') ASC, i.id ASC",
+      cursorWhere:
+        "(COALESCE(a.last_name, '') > $%1$d OR (COALESCE(a.last_name, '') = $%1$d AND COALESCE(a.first_name, '') > $%2$d) OR (COALESCE(a.last_name, '') = $%1$d AND COALESCE(a.first_name, '') = $%2$d AND i.id > $%3$d))",
+    };
+  }
+
+  if (sort === 'author_desc') {
+    return {
+      orderBy:
+        "COALESCE(a.last_name, '') DESC, COALESCE(a.first_name, '') DESC, i.id DESC",
+      cursorWhere:
+        "(COALESCE(a.last_name, '') < $%1$d OR (COALESCE(a.last_name, '') = $%1$d AND COALESCE(a.first_name, '') < $%2$d) OR (COALESCE(a.last_name, '') = $%1$d AND COALESCE(a.first_name, '') = $%2$d AND i.id < $%3$d))",
+    };
+  }
+
+  return {
+    orderBy: 'i.id DESC',
+    cursorWhere: 'i.id < $%1$d',
+  };
+}
+
+function hasQueryParam(req: ApiRequest, key: string) {
+  return getQueryParam(req, key) !== undefined;
+}
+
 // noinspection JSUnusedGlobalSymbols
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (handleOptions(req, res)) {
@@ -30,7 +124,146 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   if (req.method === 'GET') {
     try {
-      const books = await sql`
+      const hasPagingOrFiltering = [
+        'id',
+        'limit',
+        'cursor',
+        'q',
+        'type',
+        'status',
+        'priority',
+        'author',
+        'sort',
+      ].some((key) => hasQueryParam(req, key));
+
+      if (!hasPagingOrFiltering) {
+        const books = await sql`
+          SELECT
+            i.id,
+            i.title,
+            i.description,
+            i.tag_id,
+            i.status_id,
+            i.priority_id,
+            i.author_id,
+            i.publisher_id,
+            i.pages,
+            it.name AS type,
+            s.name AS status,
+            p.name AS priority,
+            a.first_name AS author_first_name,
+            a.last_name AS author_last_name,
+            a.country AS author_country,
+            pub.name AS publisher,
+            pub.country AS publisher_country
+          FROM books i
+          LEFT JOIN tags it ON it.id = i.tag_id
+          LEFT JOIN statuses s ON s.id = i.status_id
+          LEFT JOIN priorities p ON p.id = i.priority_id
+          LEFT JOIN authors a ON a.id = i.author_id
+          LEFT JOIN publishers pub ON pub.id = i.publisher_id
+          ORDER BY i.id DESC;
+        `;
+
+        return sendJson(req, res, 200, books);
+      }
+
+      const id = getQueryNumber(req, 'id');
+      const q = (getQueryParam(req, 'q') || '').trim();
+      const type = (getQueryParam(req, 'type') || '').trim();
+      const status = (getQueryParam(req, 'status') || '').trim();
+      const priority = (getQueryParam(req, 'priority') || '').trim();
+      const author = (getQueryParam(req, 'author') || '').trim();
+      const sortQuery = (getQueryParam(req, 'sort') || 'newest').trim();
+      const sort: BooksSort = [
+        'newest',
+        'title_asc',
+        'title_desc',
+        'author_asc',
+        'author_desc',
+      ].includes(sortQuery)
+        ? (sortQuery as BooksSort)
+        : 'newest';
+
+      const limitQuery = getQueryNumber(req, 'limit');
+      const limit = Math.max(
+        1,
+        Math.min(100, limitQuery === null ? 24 : Math.floor(limitQuery)),
+      );
+
+      const cursorRaw = getQueryParam(req, 'cursor');
+      const cursor = decodeCursor(cursorRaw);
+      if (cursorRaw && !cursor) {
+        return sendJson(req, res, 400, { error: 'invalid_cursor' });
+      }
+
+      const values: unknown[] = [];
+      const where: string[] = [];
+
+      if (id !== null) {
+        values.push(id);
+        where.push(`i.id = $${values.length}`);
+      }
+
+      if (q) {
+        values.push(`%${q}%`);
+        where.push(
+          `(i.title ILIKE $${values.length} OR COALESCE(i.description, '') ILIKE $${values.length} OR CONCAT_WS(' ', a.first_name, a.last_name) ILIKE $${values.length} OR COALESCE(pub.name, '') ILIKE $${values.length})`,
+        );
+      }
+
+      if (type) {
+        values.push(type);
+        where.push(`it.name = $${values.length}`);
+      }
+      if (status) {
+        values.push(status);
+        where.push(`s.name = $${values.length}`);
+      }
+      if (priority) {
+        values.push(priority);
+        where.push(`p.name = $${values.length}`);
+      }
+      if (author) {
+        values.push(author);
+        where.push(`CONCAT_WS(' ', a.first_name, a.last_name) = $${values.length}`);
+      }
+
+      const sortConfig = getSortConfig(sort);
+      if (cursor) {
+        if (sort === 'newest') {
+          values.push(cursor.id);
+          where.push(sortConfig.cursorWhere.replace('%1$d', String(values.length)));
+        } else if (sort === 'title_asc' || sort === 'title_desc') {
+          values.push(cursor.title || '');
+          const titleParamIndex = values.length;
+          values.push(cursor.id);
+          const idParamIndex = values.length;
+          where.push(
+            sortConfig.cursorWhere
+              .replace('%1$d', String(titleParamIndex))
+              .replace('%2$d', String(idParamIndex)),
+          );
+        } else {
+          values.push(cursor.author_last_name || '');
+          const lastNameParamIndex = values.length;
+          values.push(cursor.author_first_name || '');
+          const firstNameParamIndex = values.length;
+          values.push(cursor.id);
+          const idParamIndex = values.length;
+          where.push(
+            sortConfig.cursorWhere
+              .replace('%1$d', String(lastNameParamIndex))
+              .replace('%2$d', String(firstNameParamIndex))
+              .replace('%3$d', String(idParamIndex)),
+          );
+        }
+      }
+
+      values.push(limit + 1);
+      const limitParamIndex = values.length;
+
+      const query = `
         SELECT
           i.id,
           i.title,
@@ -55,10 +288,39 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         LEFT JOIN priorities p ON p.id = i.priority_id
         LEFT JOIN authors a ON a.id = i.author_id
         LEFT JOIN publishers pub ON pub.id = i.publisher_id
-        ORDER BY i.id DESC;
+        ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+        ORDER BY ${sortConfig.orderBy}
+        LIMIT $${limitParamIndex};
       `;
 
-      return sendJson(req, res, 200, books);
+      const rows = await sql.query(query, values);
+      const hasMore = rows.length > limit;
+      const items = hasMore ? rows.slice(0, limit) : rows;
+
+      let nextCursor: string | null = null;
+      if (hasMore && items.length > 0) {
+        const lastItem = items[items.length - 1] as Record<string, unknown>;
+        const cursorPayload: CursorPayload = {
+          id: Number(lastItem.id),
+        };
+
+        if (sort === 'title_asc' || sort === 'title_desc') {
+          cursorPayload.title = String(lastItem.title || '');
+        }
+
+        if (sort === 'author_asc' || sort === 'author_desc') {
+          cursorPayload.author_first_name = String(lastItem.author_first_name || '');
+          cursorPayload.author_last_name = String(lastItem.author_last_name || '');
+        }
+
+        nextCursor = encodeCursor(cursorPayload);
+      }
+
+      return sendJson(req, res, 200, {
+        items,
+        hasMore,
+        nextCursor,
+      });
     } catch (err) {
       return sendDbError(req, res, err);
     }
