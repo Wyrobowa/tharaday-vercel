@@ -229,6 +229,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         where.push(`CONCAT_WS(' ', a.first_name, a.last_name) = $${values.length}`);
       }
 
+      const baseWhere = [...where];
+      const baseValues = [...values];
+
       const sortConfig = getSortConfig(sort);
       if (cursor) {
         if (sort === 'newest') {
@@ -293,9 +296,24 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         LIMIT $${limitParamIndex};
       `;
 
-      const rows = await sql.query(query, values);
+      const countQuery = `
+        SELECT COUNT(*)::int AS total
+        FROM books i
+        LEFT JOIN tags it ON it.id = i.tag_id
+        LEFT JOIN statuses s ON s.id = i.status_id
+        LEFT JOIN priorities p ON p.id = i.priority_id
+        LEFT JOIN authors a ON a.id = i.author_id
+        LEFT JOIN publishers pub ON pub.id = i.publisher_id
+        ${baseWhere.length > 0 ? `WHERE ${baseWhere.join(' AND ')}` : ''};
+      `;
+
+      const [rows, countRows] = await Promise.all([
+        sql.query(query, values),
+        sql.query(countQuery, baseValues),
+      ]);
       const hasMore = rows.length > limit;
       const items = hasMore ? rows.slice(0, limit) : rows;
+      const total = Number((countRows[0] as { total?: number } | undefined)?.total || 0);
 
       let nextCursor: string | null = null;
       if (hasMore && items.length > 0) {
@@ -320,6 +338,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         items,
         hasMore,
         nextCursor,
+        total,
       });
     } catch (err) {
       return sendDbError(req, res, err);
