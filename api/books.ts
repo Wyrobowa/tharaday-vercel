@@ -33,7 +33,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const books = await sql`
         SELECT
           i.id,
-          i.name,
+          i.title,
+          i.description,
           i.tag_id,
           i.status_id,
           i.priority_id,
@@ -67,7 +68,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     try {
       const body = readJsonBody(req);
 
-      const name = String(body.name ?? '').trim();
+      const title = String(body.title ?? '').trim();
+      const descriptionRaw = body.description;
+      const description =
+        descriptionRaw === null || descriptionRaw === undefined
+          ? null
+          : String(descriptionRaw).trim();
+      const descriptionValue = description === '' ? null : description;
       const typeId = body.tag_id ? Number(body.tag_id) : null;
       const statusId = body.status_id ? Number(body.status_id) : null;
       const priorityId = body.priority_id ? Number(body.priority_id) : null;
@@ -78,8 +85,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           ? null
           : Number(body.pages);
 
-      if (!name) {
-        return sendJson(req, res, 400, { error: 'books: name required' });
+      if (!title) {
+        return sendJson(req, res, 400, { error: 'books: title required' });
       }
       if (typeId === null) {
         return sendJson(req, res, 400, { error: 'books: tag_id required' });
@@ -124,9 +131,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
 
       const rows = await sql`
-        INSERT INTO books (name, tag_id, status_id, priority_id, author_id, publisher_id, pages)
-        VALUES (${name}, ${typeId}, ${statusId}, ${priorityId}, ${authorId}, ${publisherId}, ${pagesValue})
-        RETURNING id, name, tag_id, status_id, priority_id, author_id, publisher_id, pages;
+        INSERT INTO books (title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages)
+        VALUES (${title}, ${descriptionValue}, ${typeId}, ${statusId}, ${priorityId}, ${authorId}, ${publisherId}, ${pagesValue})
+        RETURNING id, title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages;
       `;
 
       return sendJson(req, res, 201, rows[0]);
@@ -149,8 +156,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method === 'PATCH') {
     try {
       const body = readJsonBody(req);
-      const { id, name, tag_id, status_id, priority_id, author_id, publisher_id, pages } =
-        body;
+      const {
+        id,
+        title,
+        description,
+        tag_id,
+        status_id,
+        priority_id,
+        author_id,
+        publisher_id,
+        pages,
+      } = body;
 
       if (!id) {
         return sendJson(req, res, 400, { error: 'id required' });
@@ -160,9 +176,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const values: unknown[] = [];
       let placeholderIndex = 1;
 
-      if (name !== undefined) {
-        updates.push(`name = $${placeholderIndex++}`);
-        values.push(name);
+      if (title !== undefined) {
+        updates.push(`title = $${placeholderIndex++}`);
+        values.push(title);
+      }
+      if (description !== undefined) {
+        updates.push(`description = $${placeholderIndex++}`);
+        values.push(
+          description === '' || description === null ? null : String(description),
+        );
       }
       if (tag_id !== undefined) {
         if (tag_id === '' || tag_id === null) {
@@ -260,7 +282,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         UPDATE books
         SET ${updates.join(', ')}
         WHERE id = $${placeholderIndex}
-        RETURNING id, name, tag_id, status_id, priority_id, author_id, publisher_id, pages;
+        RETURNING id, title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages;
       `;
 
       const rows = await sql.query(query, values);
