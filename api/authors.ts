@@ -2,23 +2,25 @@
  * @description Authors CRUD.
  * @methods GET, POST, PATCH, DELETE
  */
-import { getSql, MissingDatabaseUrlError } from './_db';
-import { handleOptions, readJsonBody, sendJson, sendNoContent } from './_utils';
+import {
+  ApiRequest,
+  ApiResponse,
+  handleOptions,
+  readJsonBody,
+  sendJson,
+  sendNoContent,
+} from './_utils';
+import { getQueryId, getSqlOrSendError, sendDbError } from './_handler';
 
 // noinspection JSUnusedGlobalSymbols
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (handleOptions(req, res)) {
     return;
   }
 
-  let sql;
-  try {
-    sql = getSql();
-  } catch (err) {
-    if (err instanceof MissingDatabaseUrlError) {
-      return sendJson(req, res, 500, { error: 'missing_database_url' });
-    }
-    return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+  const sql = getSqlOrSendError(req, res);
+  if (!sql) {
+    return;
   }
 
   if (req.method === 'GET') {
@@ -31,7 +33,7 @@ export default async function handler(req: any, res: any) {
 
       return sendJson(req, res, 200, authors);
     } catch (err) {
-      return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+      return sendDbError(req, res, err);
     }
   }
 
@@ -60,7 +62,7 @@ export default async function handler(req: any, res: any) {
 
       return sendJson(req, res, 201, rows[0]);
     } catch (err) {
-      return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+      return sendDbError(req, res, err);
     }
   }
 
@@ -110,15 +112,13 @@ export default async function handler(req: any, res: any) {
 
       return sendJson(req, res, 200, rows[0]);
     } catch (err) {
-      return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+      return sendDbError(req, res, err);
     }
   }
 
   if (req.method === 'DELETE') {
     try {
-      const idValue = Array.isArray(req.query?.id)
-        ? req.query.id[0]
-        : req.query?.id;
+      const idValue = getQueryId(req);
 
       if (!idValue) {
         return sendJson(req, res, 400, { error: 'id required' });
@@ -128,7 +128,7 @@ export default async function handler(req: any, res: any) {
 
       return sendNoContent(req, res);
     } catch (err) {
-      return sendJson(req, res, 500, { error: 'db_error', message: String(err) });
+      return sendDbError(req, res, err);
     }
   }
 
