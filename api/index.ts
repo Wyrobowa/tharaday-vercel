@@ -13,10 +13,15 @@ type ParsedMeta = {
 };
 
 function parseRouteMeta(filePath: string): ParsedMeta {
-  let contents = '';
-  try {
-    contents = fs.readFileSync(filePath, 'utf8');
-  } catch {
+  const contents = (() => {
+    try {
+      return fs.readFileSync(filePath, 'utf8');
+    } catch {
+      return null;
+    }
+  })();
+
+  if (!contents) {
     return {};
   }
 
@@ -59,13 +64,13 @@ const excludedRoutes = new Set(['routes']);
 
 export function listRoutes(): RouteMeta[] {
   const apiDir = path.join(process.cwd(), 'api');
-  let entries: string[];
-
-  try {
-    entries = fs.readdirSync(apiDir);
-  } catch {
-    entries = [];
-  }
+  const entries = (() => {
+    try {
+      return fs.readdirSync(apiDir);
+    } catch {
+      return [] as string[];
+    }
+  })();
 
   const files = entries.filter((file) => {
     const lower = file.toLowerCase();

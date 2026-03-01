@@ -21,6 +21,13 @@
       ]
     },
     {
+      "path": "/api/books-filters",
+      "description": "List global filter options for books.",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
       "path": "/api/health",
       "description": "Health check (DB connectivity).",
       "methods": [
