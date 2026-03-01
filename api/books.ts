@@ -131,7 +131,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         'q',
         'type',
         'status',
-        'priority',
         'author',
         'sort',
       ].some((key) => hasQueryParam(req, key));
@@ -144,13 +143,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             i.description,
             i.tag_id,
             i.status_id,
-            i.priority_id,
             i.author_id,
             i.publisher_id,
             i.pages,
             it.name AS type,
             s.name AS status,
-            p.name AS priority,
             a.first_name AS author_first_name,
             a.last_name AS author_last_name,
             a.country AS author_country,
@@ -159,7 +156,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           FROM books i
           LEFT JOIN tags it ON it.id = i.tag_id
           LEFT JOIN statuses s ON s.id = i.status_id
-          LEFT JOIN priorities p ON p.id = i.priority_id
           LEFT JOIN authors a ON a.id = i.author_id
           LEFT JOIN publishers pub ON pub.id = i.publisher_id
           WHERE (s.name IS NULL OR LOWER(s.name) <> 'removed')
@@ -173,7 +169,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const q = (getQueryParam(req, 'q') || '').trim();
       const type = (getQueryParam(req, 'type') || '').trim();
       const status = (getQueryParam(req, 'status') || '').trim();
-      const priority = (getQueryParam(req, 'priority') || '').trim();
       const author = (getQueryParam(req, 'author') || '').trim();
       const sortQuery = (getQueryParam(req, 'sort') || 'newest').trim();
       const sort: BooksSort = [
@@ -220,10 +215,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (status) {
         values.push(status);
         where.push(`s.name = $${values.length}`);
-      }
-      if (priority) {
-        values.push(priority);
-        where.push(`p.name = $${values.length}`);
       }
       if (author) {
         values.push(author);
@@ -274,13 +265,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           i.description,
           i.tag_id,
           i.status_id,
-          i.priority_id,
           i.author_id,
           i.publisher_id,
           i.pages,
           it.name AS type,
           s.name AS status,
-          p.name AS priority,
           a.first_name AS author_first_name,
           a.last_name AS author_last_name,
           a.country AS author_country,
@@ -289,7 +278,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         FROM books i
         LEFT JOIN tags it ON it.id = i.tag_id
         LEFT JOIN statuses s ON s.id = i.status_id
-        LEFT JOIN priorities p ON p.id = i.priority_id
         LEFT JOIN authors a ON a.id = i.author_id
         LEFT JOIN publishers pub ON pub.id = i.publisher_id
         ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
@@ -302,7 +290,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         FROM books i
         LEFT JOIN tags it ON it.id = i.tag_id
         LEFT JOIN statuses s ON s.id = i.status_id
-        LEFT JOIN priorities p ON p.id = i.priority_id
         LEFT JOIN authors a ON a.id = i.author_id
         LEFT JOIN publishers pub ON pub.id = i.publisher_id
         ${baseWhere.length > 0 ? `WHERE ${baseWhere.join(' AND ')}` : ''};
@@ -359,7 +346,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const descriptionValue = description === '' ? null : description;
       const typeId = body.tag_id ? Number(body.tag_id) : null;
       const statusId = body.status_id ? Number(body.status_id) : null;
-      const priorityId = body.priority_id ? Number(body.priority_id) : null;
       const authorId = body.author_id ? Number(body.author_id) : null;
       const publisherId = body.publisher_id ? Number(body.publisher_id) : null;
       const pagesValue =
@@ -376,9 +362,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (statusId === null) {
         return sendJson(req, res, 400, { error: 'books: status_id required' });
       }
-      if (priorityId === null) {
-        return sendJson(req, res, 400, { error: 'books: priority_id required' });
-      }
       if (authorId === null) {
         return sendJson(req, res, 400, { error: 'books: author_id required' });
       }
@@ -391,11 +374,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (!Number.isFinite(statusId)) {
         return sendJson(req, res, 400, {
           error: 'books: status_id must be a number',
-        });
-      }
-      if (!Number.isFinite(priorityId)) {
-        return sendJson(req, res, 400, {
-          error: 'books: priority_id must be a number',
         });
       }
       if (!Number.isFinite(authorId)) {
@@ -413,9 +391,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
 
       const rows = await sql`
-        INSERT INTO books (title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages)
-        VALUES (${title}, ${descriptionValue}, ${typeId}, ${statusId}, ${priorityId}, ${authorId}, ${publisherId}, ${pagesValue})
-        RETURNING id, title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages;
+        INSERT INTO books (title, description, tag_id, status_id, author_id, publisher_id, pages)
+        VALUES (${title}, ${descriptionValue}, ${typeId}, ${statusId}, ${authorId}, ${publisherId}, ${pagesValue})
+        RETURNING id, title, description, tag_id, status_id, author_id, publisher_id, pages;
       `;
 
       return sendJson(req, res, 201, rows[0]);
@@ -424,7 +402,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (pgErr.code === '23503') {
         return sendJson(req, res, 400, {
           error: 'invalid_fkey',
-          message: 'Tag, status, priority, author, or publisher does not exist',
+          message: 'Tag, status, author, or publisher does not exist',
         });
       }
 
@@ -444,7 +422,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         description,
         tag_id,
         status_id,
-        priority_id,
         author_id,
         publisher_id,
         pages,
@@ -498,21 +475,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         updates.push(`status_id = $${placeholderIndex++}`);
         values.push(statusIdValue);
       }
-      if (priority_id !== undefined) {
-        if (priority_id === '' || priority_id === null) {
-          return sendJson(req, res, 400, {
-            error: 'books: priority_id must be a number',
-          });
-        }
-        const priorityIdValue = Number(priority_id);
-        if (!Number.isFinite(priorityIdValue)) {
-          return sendJson(req, res, 400, {
-            error: 'books: priority_id must be a number',
-          });
-        }
-        updates.push(`priority_id = $${placeholderIndex++}`);
-        values.push(priorityIdValue);
-      }
       if (author_id !== undefined) {
         if (author_id === '' || author_id === null) {
           return sendJson(req, res, 400, {
@@ -564,7 +526,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         UPDATE books
         SET ${updates.join(', ')}
         WHERE id = $${placeholderIndex}
-        RETURNING id, title, description, tag_id, status_id, priority_id, author_id, publisher_id, pages;
+        RETURNING id, title, description, tag_id, status_id, author_id, publisher_id, pages;
       `;
 
       const rows = await sql.query(query, values);

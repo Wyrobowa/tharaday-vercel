@@ -20,8 +20,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
 
   try {
-    const [typesRows, statusesRows, prioritiesRows, authorsRows] =
-      await Promise.all([
+    const [typesRows, statusesRows, authorsRows] = await Promise.all([
         sql`
           SELECT name
           FROM tags
@@ -33,12 +32,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           FROM statuses
           WHERE is_active = true
             AND LOWER(name) <> 'removed'
-          ORDER BY name;
-        `,
-        sql`
-          SELECT name
-          FROM priorities
-          WHERE is_active = true
           ORDER BY name;
         `,
         sql`
@@ -57,9 +50,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const statuses = statusesRows
       .map((row) => String(row.name || '').trim())
       .filter(Boolean);
-    const priorities = prioritiesRows
-      .map((row) => String(row.name || '').trim())
-      .filter(Boolean);
     const authors = authorsRows
       .map((row) => String(row.name || '').trim())
       .filter(Boolean);
@@ -67,7 +57,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return sendJson(req, res, 200, {
       types,
       statuses,
-      priorities,
       authors,
     });
   } catch (err) {
