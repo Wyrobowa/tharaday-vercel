@@ -1,5 +1,5 @@
 /**
- * @description List roles.
+ * @description List user roles.
  * @methods GET
  */
 import { ApiRequest, ApiResponse, handleOptions, sendJson } from './_utils';
@@ -22,7 +22,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const roles = await sql`
       SELECT id, name, is_active
-      FROM roles
+      FROM user_roles
       WHERE is_active = true
       ORDER BY name;
     `;

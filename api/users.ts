@@ -16,6 +16,7 @@ import {
   PostgresError,
   sendDbError,
 } from './_handler';
+import { hashPassword } from './_auth';
 
 // noinspection JSUnusedGlobalSymbols
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -40,7 +41,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           r.name AS role,
           s.name AS status
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN user_roles r ON r.id = u.role_id
         LEFT JOIN statuses s ON s.id = u.status_id
         ORDER BY u.id DESC;
       `;
@@ -57,6 +58,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
       const name = String(body.name ?? '').trim();
       const email = String(body.email ?? '').trim();
+      const password = String(body.password ?? '').trim();
       const roleIdRaw = body.role_id;
       const statusIdRaw = body.status_id;
 
@@ -76,6 +78,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (!email) {
         return sendJson(req, res, 400, { error: 'Users: email required' });
       }
+      if (!password) {
+        return sendJson(req, res, 400, { error: 'Users: password required' });
+      }
       if (!Number.isFinite(roleId)) {
         return sendJson(req, res, 400, { error: 'Users: role_id must be a number' });
       }
@@ -85,9 +90,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         });
       }
 
+      const passwordHash = await hashPassword(password);
+
       const rows = await sql`
-        INSERT INTO users (name, email, role_id, status_id)
-        VALUES (${name}, ${email}, ${roleId}, ${statusId})
+        INSERT INTO users (name, email, role_id, status_id, password_hash, password_updated_at)
+        VALUES (${name}, ${email}, ${roleId}, ${statusId}, ${passwordHash}, NOW())
         RETURNING id, name, email, role_id, status_id;
       `;
 
@@ -108,6 +115,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return sendJson(req, res, 400, {
           error: 'invalid_fkey',
           message: 'Role or status does not exist',
+        });
+      }
+      if (pgErr.code === '42703') {
+        return sendJson(req, res, 500, {
+          error: 'missing_password_hash_column',
+          message: 'Add password_hash column to users table',
         });
       }
 
@@ -168,6 +181,19 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         }
         updates.push(`status_id = $${placeholderIndex++}`);
         values.push(statusIdValue);
+      }
+      if (body.password !== undefined) {
+        const passwordValue = String(body.password ?? '').trim();
+        if (!passwordValue) {
+          return sendJson(req, res, 400, {
+            error: 'Users: password cannot be empty',
+          });
+        }
+
+        const passwordHash = await hashPassword(passwordValue);
+        updates.push(`password_hash = $${placeholderIndex++}`);
+        values.push(passwordHash);
+        updates.push(`password_updated_at = NOW()`);
       }
 
       if (updates.length === 0) {

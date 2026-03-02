@@ -35,6 +35,13 @@
       ]
     },
     {
+      "path": "/api/login",
+      "description": "Log in using email and password.",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
       "path": "/api/priorities",
       "description": "List priorities.",
       "methods": [
@@ -53,9 +60,16 @@
     },
     {
       "path": "/api/roles",
-      "description": "List roles.",
+      "description": "List user roles.",
       "methods": [
         "GET"
+      ]
+    },
+    {
+      "path": "/api/signup",
+      "description": "Sign up with email and password.",
+      "methods": [
+        "POST"
       ]
     },
     {

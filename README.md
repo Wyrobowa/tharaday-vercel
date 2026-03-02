@@ -19,6 +19,8 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - `PATCH /api/authors`
 - `DELETE /api/authors?id=...`
 - `GET /api/health`
+- `POST /api/login`
+- `POST /api/signup`
 - `GET /api/publishers`
 - `POST /api/publishers`
 - `PATCH /api/publishers`
@@ -39,6 +41,7 @@ separate Vercel project (frontend lives in `tharaday-next`).
 ## Database schema + seeds
 - `docs/schema.sql` -> baseline tables for users/books + lookup tables
 - `docs/seed.sql` -> starter data for local/dev environments
+- `docs/AUTH.md` -> auth-related schema requirements and login usage
 
 The homepage (`/`) renders a list of endpoints from `public/routes.json`. That
 file is generated at install time by `scripts/generate-routes.mjs` based on the
