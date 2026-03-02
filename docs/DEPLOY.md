@@ -1,7 +1,7 @@
 # Deploy Checklist
 
 This checklist covers both repos:
-- Backend: `tharaday-vercel` (Vercel Functions)
+- Backend: `bookstore-backend` (Vercel Functions)
 - Frontend: `tharaday-next` (GitHub Pages)
 
 ## 1) Backend (Vercel)

@@ -2,7 +2,7 @@
 
 ## Create the project
 1. Go to Vercel and click **Add New → Project**.
-2. Import the `tharaday-vercel` repo.
+2. Import the `bookstore-backend` repo.
 3. Keep defaults (Framework preset can be Other / No Framework).
 4. Deploy.
 

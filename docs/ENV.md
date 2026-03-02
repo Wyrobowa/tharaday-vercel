@@ -1,6 +1,6 @@
 # Environment Variables
 
-## Backend (tharaday-vercel)
+## Backend (bookstore-backend)
 Required:
 - `DATABASE_URL` (Neon Postgres connection string)
 
