@@ -36,7 +36,6 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - `PATCH /api/books`
 - `DELETE /api/books?id=...`
 - `GET /api/tags`
-- `GET /api/priorities`
 
 ## Database schema + seeds
 - `docs/schema.sql` -> baseline tables for users/books + lookup tables

@@ -42,13 +42,6 @@
       ]
     },
     {
-      "path": "/api/priorities",
-      "description": "List priorities.",
-      "methods": [
-        "GET"
-      ]
-    },
-    {
       "path": "/api/publishers",
       "description": "Publishers CRUD.",
       "methods": [
