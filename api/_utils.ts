@@ -23,6 +23,17 @@ function parseAllowedOrigins(value?: string) {
     .filter(Boolean);
 }
 
+const LOCAL_DEV_ORIGINS = new Set([
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
+
+function isLocalDevOrigin(origin: string) {
+  return LOCAL_DEV_ORIGINS.has(origin);
+}
+
 function getAllowedOrigin(req: ApiRequest) {
   const allowed = parseAllowedOrigins(process.env.ALLOWED_ORIGINS);
   if (allowed.length === 0) {
@@ -34,7 +45,10 @@ function getAllowedOrigin(req: ApiRequest) {
     ? requestOrigin[0]
     : requestOrigin;
 
-  if (normalizedOrigin && allowed.includes(normalizedOrigin)) {
+  if (
+    normalizedOrigin &&
+    (allowed.includes(normalizedOrigin) || isLocalDevOrigin(normalizedOrigin))
+  ) {
     return normalizedOrigin;
   }
 
@@ -43,6 +57,7 @@ function getAllowedOrigin(req: ApiRequest) {
 
 export function setCors(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', getAllowedOrigin(req));
+  res.setHeader('Vary', 'Origin');
   res.setHeader(
     'Access-Control-Allow-Methods',
     'GET,POST,PATCH,DELETE,OPTIONS',
