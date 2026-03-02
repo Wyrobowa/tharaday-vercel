@@ -67,5 +67,5 @@ ALTER COLUMN password_hash SET NOT NULL;
 ## Environment variables
 - `AUTH_JWT_SECRET` (required for `/api/login`)
 - `AUTH_TOKEN_TTL_SECONDS` (optional, default `604800`)
-- `SIGNUP_DEFAULT_ROLE_NAME` (optional, default `user`)
+- `SIGNUP_DEFAULT_ROLE_NAME` (optional, default `customer`)
 - `SIGNUP_DEFAULT_STATUS_NAME` (optional, default `active`)

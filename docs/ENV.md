@@ -9,7 +9,7 @@ Recommended:
   - Example: `https://wyrobowa.github.io,http://localhost:3000`
   - Localhost origins (`http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:5173`, `http://127.0.0.1:5173`) are also accepted automatically.
 - `AUTH_TOKEN_TTL_SECONDS` (JWT lifetime in seconds, default `604800`)
-- `SIGNUP_DEFAULT_ROLE_NAME` (signup role name, default `user`)
+- `SIGNUP_DEFAULT_ROLE_NAME` (signup role name, default `customer`)
 - `SIGNUP_DEFAULT_STATUS_NAME` (signup status name, default `active`)
 
 Required for auth:

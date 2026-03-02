@@ -11,7 +11,7 @@ type LookupRow = {
 };
 
 async function resolveDefaultRoleId(sql: ReturnType<typeof getSqlOrSendError>) {
-  const preferredRoleName = (process.env.SIGNUP_DEFAULT_ROLE_NAME || 'user').trim();
+  const preferredRoleName = (process.env.SIGNUP_DEFAULT_ROLE_NAME || 'customer').trim();
 
   const preferred = await sql`
     SELECT id
