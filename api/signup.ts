@@ -10,7 +10,7 @@ type LookupRow = {
   id: number;
 };
 
-async function resolveDefaultRoleId(sql: ReturnType<typeof getSqlOrSendError>) {
+async function resolveDefaultRoleId(sql: Exclude<ReturnType<typeof getSqlOrSendError>, null>) {
   const preferredRoleName = (process.env.SIGNUP_DEFAULT_ROLE_NAME || 'customer').trim();
 
   const preferred = await sql`
@@ -37,7 +37,7 @@ async function resolveDefaultRoleId(sql: ReturnType<typeof getSqlOrSendError>) {
   return fallback.length > 0 ? (fallback[0] as LookupRow).id : null;
 }
 
-async function resolveDefaultStatusId(sql: ReturnType<typeof getSqlOrSendError>) {
+async function resolveDefaultStatusId(sql: Exclude<ReturnType<typeof getSqlOrSendError>, null>) {
   const preferredStatusName = (process.env.SIGNUP_DEFAULT_STATUS_NAME || 'active').trim();
 
   const preferred = await sql`

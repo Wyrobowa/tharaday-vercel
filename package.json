@@ -20,28 +20,27 @@
     "postinstall": "npm run generate:routes"
   },
   "overrides": {
-    "@babel/runtime": "^7.28.6",
-    "cookie": "^1.1.1",
     "esbuild": "^0.27.2",
     "minimatch": "^10.2.4",
     "path-to-regexp": "^8.3.0",
     "tar": "^7.5.7",
     "undici": "^7.20.0",
-    "ajv": "^8.17.1"
+    "ajv": "^8.17.1",
+    "eslint": {
+      "ajv": "^6.12.6"
+    }
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.56.1",
-    "@typescript-eslint/parser": "^8.56.1",
-    "eslint": "^10.0.2",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.3.0",
+    "globals": "^17.4.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
-    "vercel": "^48.8.2"
+    "vercel": "^50.32.5"
   }
 }

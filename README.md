@@ -18,24 +18,25 @@ separate Vercel project (frontend lives in `tharaday-next`).
 - `POST /api/authors`
 - `PATCH /api/authors`
 - `DELETE /api/authors?id=...`
-- `GET /api/health`
-- `POST /api/login`
-- `POST /api/signup`
-- `GET /api/publishers`
-- `POST /api/publishers`
-- `PATCH /api/publishers`
-- `DELETE /api/publishers?id=...`
-- `GET /api/users`
-- `POST /api/users`
-- `PATCH /api/users`
-- `DELETE /api/users?id=...`
-- `GET /api/roles`
-- `GET /api/statuses`
 - `GET /api/books`
 - `POST /api/books`
 - `PATCH /api/books`
 - `DELETE /api/books?id=...`
+- `GET /api/books-filters`
+- `GET /api/health`
+- `POST /api/login`
+- `GET /api/publishers`
+- `POST /api/publishers`
+- `PATCH /api/publishers`
+- `DELETE /api/publishers?id=...`
+- `GET /api/roles`
+- `POST /api/signup`
+- `GET /api/statuses`
 - `GET /api/tags`
+- `GET /api/users`
+- `POST /api/users`
+- `PATCH /api/users`
+- `DELETE /api/users?id=...`
 
 ## Database schema + seeds
 - `docs/schema.sql` -> baseline tables for users/books + lookup tables
